@@ -1,0 +1,228 @@
+@(request: play.mvc.Http.Request)
+
+  <!DOCTYPE html> 
+  <html>
+ <head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+<link href="Appcss.css" type="text/css" rel="stylesheet" media="screen" />
+  <style>
+
+.column {
+   float: left;
+  
+   padding: 10px;
+   height: 150px; 
+}
+.column1 {
+   float: left;
+  
+   padding: 10px;
+   height: 150px; 
+}
+
+.row:after {
+   content: "";
+   display: table;
+   clear: both;
+}
+* {
+   box-sizing: border-box;
+}
+#rcorners2 {
+   border-radius: 25px;
+   border: 2px solid #73AD21;
+   padding: 20px; 
+   
+}
+
+</style>
+</head>
+  <meta charset="utf-8" />
+  <title>Reactive Tweets</title>
+    <body>  
+
+<div id=rcorners2>
+<div class="row">
+ <div class="column" style=" width: 35%;" >
+    
+ </div>
+ <div class="column1" style=" width: 65%;">
+   <h1 style="height: 100px; color: #33a5ff ; text-align: left;">Reactive Tweets</h1>
+ </div>
+</div>
+  
+  <input type="text" id="name">
+  
+  <br/>
+    <button type="button" onclick="chk()">submit</button>
+   
+  <br/>
+   
+   
+  <div id="output"></div> 
+  
+  <script type='text/javascript' src='https://code.jquery.com/jquery-3.3.1.min.js'></script>
+  <script language="javascript" type="text/javascript">
+
+  var output;
+	var dummy;
+	var tempdiv="";
+  function init()
+  {
+    output = document.getElementById("output");
+
+  }
+
+  function chk(){
+	  var x = document.getElementById("name").value;
+	//  var y="http://localhost:9000/statistics?name1="+x;
+	  var n = "http://localhost:9000?keyword="+x;
+	 
+	  testWebSocket(n);
+  }
+
+  function testWebSocket(n)
+  {
+    websocket = new WebSocket("ws://localhost:9000/ws");
+    
+    
+    var xhttp = new XMLHttpRequest();
+	  
+	  xhttp.open("GET", n, true);
+	  xhttp.send();
+	  
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+  function onOpen(evt)
+  {
+    var sent_message = JSON.stringify("Handshake"); 
+    doSend(sent_message);
+    websocket.send(sent_message);
+    writeToScreen("connected");
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+	var arr=JSON.parse(evt.data);
+	var ResultObj = JSON.parse(evt.data);
+	//writeToScreen(Result.Obj.response.tweets);
+	//console.log(evt.data);
+	writeLinks(arr);
+  }
+
+  
+  
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+	   var pre = document.createElement("p");
+	   pre.style.wordWrap = "break-word";
+	   pre.innerHTML = message;
+	   output.appendChild(pre);
+  }
+  
+  function writeTweets(message)
+  {
+	   var pre = document.createElement("p");
+	   pre.style.wordWrap = "break-word";
+	   pre.innerHTML = message;
+	   output.appendChild(pre);
+  }
+  
+  function writeLinks(arr)
+  { 
+	for(var i in arr)
+	{
+	     var handle = arr[i].handle;
+	     var emotion = arr[i].emotion;
+	     handle=handle.link(("http://localhost:9000/profile/"+handle))
+	     var tweet = arr[i].tweets;
+	     var location=arr[i].location;
+	     location = location.link("http://localhost:9000/location/"+location);
+	   
+	     var fullresult=handle+" ("+location+") "+ tweet;
+	    
+	  if(Boolean(!document.getElementById(arr[i].words))){
+		//alert("if");
+		var br = document.createElement("br");
+		var iDiv = document.createElement("div");
+		iDiv.id = arr[i].words;
+		iDiv.class='mainDiv';
+		iDiv.style.height = "200px";
+		        iDiv.style.width = "auto";
+				iDiv.style.overflow='auto'
+		        iDiv.style.backgroundColor = '#BDBDBD';
+				  iDiv.style.border='solid';
+		document.getElementsByTagName('body')[0].appendChild(iDiv);
+		document.body.appendChild(br);
+		  var str1= "Statistics";
+			var result1 = str1.link("http://localhost:9000/statistics?name1="+arr[i].words);
+	    document.getElementById(arr[i].words).appendChild(br);
+		    document.getElementById(arr[i].words).innerHTML = "Searched word-"+arr[i].words+"<br>"+result1+"  "+emotion+"<br>"+"<br>"+fullresult;
+		    document.getElementById(arr[i].words).appendChild(br);
+			tempdiv+=Testtweet;
+		   }
+		   
+
+		else{
+	//	alert("else");
+		var br = document.createElement("br");
+		var element = document.getElementById(arr[i].words).innerHTML;
+		var Testtweet=String(tweet);
+		Testtweet=Testtweet.slice(1);
+		Testtweet=Testtweet.slice(6);
+		Testtweet=Testtweet.trim();
+		if(Testtweet.includes('<a'))
+			{
+			//console.log("inside if");
+			Testtweet=Testtweet.replace('<a href="',"link");
+			Testtweet=Testtweet.replace('">#',"link1");
+			Testtweet=Testtweet.replace('</a>',"link1");
+			Testtweet=Testtweet.replace('http://localhost:9000/hashTag?key=', 'link1');
+			}
+		//console.log("tweet is---"+Testtweet);
+		//console.log("tempdiv"+ tempdiv);
+		if (tempdiv.indexOf(Testtweet) >= 0) {
+			//do  nothing
+		}
+		else
+		{
+			document.getElementById(arr[i].words).innerHTML+= fullresult;
+			document.getElementById(arr[i].words).appendChild(br);
+			tempdiv+=Testtweet;
+			
+		}
+		  
+		}
+	
+		var theLinks = document.getElementById(arr[i].words).getElementsByTagName("a");
+
+		  for(var i = 0; i < theLinks.length; i++) {
+		    theLinks[i].setAttribute('target','_blank');
+
+		}
+	}
+
+  }
+  window.addEventListener("load", init, false);
+   </script>
+   
+  </body>
+  </html>
